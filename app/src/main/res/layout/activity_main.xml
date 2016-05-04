@@ -23,12 +23,21 @@
 
     <include layout="@layout/content_main" />
 
+    <Button
+        android:id="@+id/clear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:text="@string/clear_log"
+        android:layout_margin="@dimen/generate_margin"
+        android:onClick="clearLog"/>
+
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
+        android:id="@+id/generate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        android:src="@android:drawable/ic_dialog_email" />
+        android:layout_margin="@dimen/generate_margin"
+        android:src="@android:drawable/ic_secure" />
 
 </android.support.design.widget.CoordinatorLayout>
