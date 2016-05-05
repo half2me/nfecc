@@ -8,6 +8,11 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
+
+import org.spongycastle.util.encoders.Base64;
+
+import java.io.UnsupportedEncodingException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,9 +27,21 @@ public class MainActivity extends AppCompatActivity {
         newKey.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Generating new keypair...", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
                 Cryptowiz.newKeyPair();
+                byte[] pubKey = Cryptowiz.publicKey().getEncoded();
+                byte[] priKey = Cryptowiz.privateKey().getEncoded();
+                Snackbar.make(view,
+                        "New keypair generated!", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+                try {
+                    TextView t=(TextView)findViewById(R.id.log);
+                    t.append("----- KEY INFO -----" + "\n\n");
+                    t.append("Private key:\n" + new String(Base64.encode(priKey), "ASCII") + "\n\n");
+                    t.append("Public key:\n" +  new String(Base64.encode(pubKey), "ASCII") + "\n\n");
+                    t.append("----- KEY INFO -----" + "\n");
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
@@ -52,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void clearLog(View view) {
-        // Clear log
+        TextView t=(TextView)findViewById(R.id.log);
+        t.setText("");
     }
 }
