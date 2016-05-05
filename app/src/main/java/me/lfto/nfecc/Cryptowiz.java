@@ -13,7 +13,9 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
-import java.security.spec.ECParameterSpec;
+
+import org.spongycastle.util.encoders.Base64;
+
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -49,6 +51,26 @@ public class Cryptowiz {
             g.initialize(ecSpec, new SecureRandom());
             kp = g.generateKeyPair();
         } catch (InvalidAlgorithmParameterException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void importKeyPair(String publicKey, String privateKey) {
+        try {
+            // Import public key
+            X509EncodedKeySpec x509ks = new X509EncodedKeySpec(
+                    Base64.decode(publicKey));
+            PublicKey pub = kf.generatePublic(x509ks);
+
+            // Import private key
+            PKCS8EncodedKeySpec p8ks = new PKCS8EncodedKeySpec(
+                    Base64.decode(privateKey));
+            PrivateKey priv = kf.generatePrivate(p8ks);
+
+            // Save to keypair
+            kp = new KeyPair(pub, priv);
+
+        } catch (InvalidKeySpecException e) {
             e.printStackTrace();
         }
     }
