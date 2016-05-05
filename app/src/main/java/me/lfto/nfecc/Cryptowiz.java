@@ -114,7 +114,7 @@ public class Cryptowiz {
      * @param data bytes to sign
      * @return signature
      */
-    public byte[] sign(byte[] data) {
+    public static byte[] sign(byte[] data) {
         Signature s = null;
         try {
             s = Signature.getInstance("NONEwithECDSA", "SC");
