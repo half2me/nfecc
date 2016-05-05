@@ -34,11 +34,10 @@ public class MainActivity extends AppCompatActivity {
                         "New keypair generated!", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
                 try {
-                    TextView t=(TextView)findViewById(R.id.log);
-                    t.append("----- KEY INFO -----" + "\n\n");
-                    t.append("Private key:\n" + new String(Base64.encode(priKey), "ASCII") + "\n\n");
-                    t.append("Public key:\n" +  new String(Base64.encode(pubKey), "ASCII") + "\n\n");
-                    t.append("----- KEY INFO -----" + "\n");
+                    log("----- KEY INFO -----" + "\n\n");
+                    log("Private key:\n" + new String(Base64.encode(priKey), "ASCII") + "\n\n");
+                    log("Public key:\n" +  new String(Base64.encode(pubKey), "ASCII") + "\n\n");
+                    log("----- KEY INFO -----" + "\n");
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
@@ -71,5 +70,10 @@ public class MainActivity extends AppCompatActivity {
     public void clearLog(View view) {
         TextView t=(TextView)findViewById(R.id.log);
         t.setText("");
+    }
+
+    public void log(String msg) {
+        TextView t=(TextView)findViewById(R.id.log);
+        t.append(msg);
     }
 }

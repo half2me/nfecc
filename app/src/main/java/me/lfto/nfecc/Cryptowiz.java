@@ -2,6 +2,7 @@ package me.lfto.nfecc;
 
 import org.spongycastle.jce.ECNamedCurveTable;
 import org.spongycastle.jce.spec.ECNamedCurveParameterSpec;
+import org.spongycastle.util.encoders.Base64;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyFactory;
@@ -13,9 +14,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
-
-import org.spongycastle.util.encoders.Base64;
-
+import java.security.Signature;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -104,6 +103,25 @@ public class Cryptowiz {
         try {
             return kf.generatePrivate(new PKCS8EncodedKeySpec(kp.getPrivate().getEncoded()));
         } catch (InvalidKeySpecException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Sign data with the private key
+     *
+     * @param data bytes to sign
+     * @return signature
+     */
+    public byte[] sign(byte[] data) {
+        Signature s = null;
+        try {
+            s = Signature.getInstance("NONEwithECDSA", "SC");
+            s.initSign(kp.getPrivate());
+            s.update(data);
+            return s.sign();
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
