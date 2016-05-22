@@ -130,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
         try {
             DepStuff.depInit(isodep);
         } catch (IOException e) {
+            Log.e("Dep", e.getMessage());
             e.printStackTrace();
         }
     }

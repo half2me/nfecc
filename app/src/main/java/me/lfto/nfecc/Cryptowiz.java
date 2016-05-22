@@ -18,6 +18,8 @@ import java.security.Signature;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * ECDA details:
@@ -30,12 +32,15 @@ public class Cryptowiz {
     private static KeyFactory kf;
     private static KeyPair kp;
 
+    public static List<PublicKey> knownKeys;
+
     static {
         Security.insertProviderAt(new org.spongycastle.jce.provider.BouncyCastleProvider(), 1);
 
         try {
             g = KeyPairGenerator.getInstance("ECDSA", "SC");
             kf = KeyFactory.getInstance("ECDSA", "SC");
+            knownKeys = new LinkedList<>();
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             e.printStackTrace();
         }
@@ -89,6 +94,10 @@ public class Cryptowiz {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public static PublicKey decodePublicKey(byte[] data) throws InvalidKeySpecException {
+        return kf.generatePublic(new X509EncodedKeySpec(data));
     }
 
     /**

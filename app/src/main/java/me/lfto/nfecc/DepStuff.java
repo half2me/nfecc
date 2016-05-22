@@ -4,6 +4,10 @@ import android.nfc.tech.IsoDep;
 import android.util.Log;
 
 import java.io.IOException;
+import java.math.BigInteger;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
 
 public class DepStuff {
     private static final byte[] CLA_INS_P1_P2 = { 0x00, (byte)0xA4, 0x04, 0x00 };
@@ -19,9 +23,32 @@ public class DepStuff {
     }
 
     public static void depInit(IsoDep isoDep) throws IOException {
+        Log.i("Dep", "Attempting to connect...");
         isoDep.connect();
-        String response = new String(isoDep.transceive(createSelectAidApdu(AID_ANDROID)));
-        Log.i("NFC Response", response);
+        Log.i("Dep", "Connected! Sending AID APDU...");
+        byte[] response = isoDep.transceive(createSelectAidApdu(AID_ANDROID));
+        try {
+            PublicKey friendKey = Cryptowiz.decodePublicKey(response);
+            if (Cryptowiz.knownKeys.contains(friendKey)) {
+                Log.i("Dep", "Known key received! Validating...");
+            } else {
+                Log.i("Dep", "Stored new key! Validating...");
+            }
+
+            // Validation
+            SecureRandom random = new SecureRandom();
+            byte[] payload = ("SIGN" + new BigInteger(130, random).toString(32)).getBytes();
+            response = isoDep.transceive(payload);
+            if (Cryptowiz.verify(response, friendKey, response)) {
+                Log.i("Dep", "Verification successull!");
+            } else {
+                Log.e("Dep", "Verification failed!");
+            }
+
+        } catch (InvalidKeySpecException e) {
+            Log.e("Dep", e.getMessage());
+        }
         isoDep.close();
+        Log.i("Dep", "Close");
     }
 }
