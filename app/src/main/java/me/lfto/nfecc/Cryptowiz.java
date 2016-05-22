@@ -115,15 +115,33 @@ public class Cryptowiz {
      * @return signature
      */
     public static byte[] sign(byte[] data) {
-        Signature s = null;
         try {
-            s = Signature.getInstance("NONEwithECDSA", "SC");
+            Signature s = Signature.getInstance("NONEwithECDSA", "SC");
             s.initSign(kp.getPrivate());
             s.update(data);
             return s.sign();
         } catch (Exception e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    /**
+     * Verify digital signature
+     * @param data data that was signed
+     * @param key public key
+     * @param sig signature
+     * @return result of validation
+     */
+    public static boolean verify(byte[] data, PublicKey key, byte[] sig){
+        try {
+            Signature signer = Signature.getInstance("NONEwithECDSA", "SC");
+            signer.initVerify(key);
+            signer.update(data);
+            return (signer.verify(sig));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
     }
 }
