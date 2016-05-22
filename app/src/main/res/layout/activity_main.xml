@@ -30,7 +30,14 @@
         android:layout_gravity="bottom|start"
         android:text="@string/clear_log"
         android:layout_margin="@dimen/generate_margin"
-        android:onClick="clearLog"/>
+        android:onClick="clearLog" />
+
+    <Switch
+        android:id="@+id/modeSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_margin="@dimen/generate_margin" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/generate"

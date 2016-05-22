@@ -2,4 +2,6 @@
     <string name="app_name">Nfecc</string>
     <string name="action_settings">Settings</string>
     <string name="clear_log">Clear log</string>
+    <string name="servicedesc">service</string>
+    <string name="aiddescription">aiddescription</string>
 </resources>

@@ -128,6 +128,7 @@ public class Cryptowiz {
 
     /**
      * Verify digital signature
+     *
      * @param data data that was signed
      * @param key public key
      * @param sig signature
