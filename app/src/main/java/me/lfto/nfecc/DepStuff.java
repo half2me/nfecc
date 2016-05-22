@@ -32,6 +32,7 @@ public class DepStuff {
             if (Cryptowiz.knownKeys.contains(friendKey)) {
                 Log.i("Dep", "Known key received! Validating...");
             } else {
+                Cryptowiz.knownKeys.add(friendKey);
                 Log.i("Dep", "Stored new key! Validating...");
             }
 
@@ -39,7 +40,7 @@ public class DepStuff {
             SecureRandom random = new SecureRandom();
             byte[] payload = ("SIGN" + new BigInteger(130, random).toString(32)).getBytes();
             response = isoDep.transceive(payload);
-            if (Cryptowiz.verify(response, friendKey, response)) {
+            if (Cryptowiz.verify(payload, friendKey, response)) {
                 Log.i("Dep", "Verification successull!");
             } else {
                 Log.e("Dep", "Verification failed!");
