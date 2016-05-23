@@ -165,13 +165,23 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
     }
 
     public synchronized void clearLog(View view) {
-        TextView t=(TextView)findViewById(R.id.log);
-        t.setText("");
-        t.scrollTo(0,0);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                TextView t=(TextView)findViewById(R.id.log);
+                t.setText("");
+                t.scrollTo(0,0);
+            }
+        });
     }
 
-    public synchronized void log(String msg) {
-        TextView t=(TextView)findViewById(R.id.log);
-        t.append(msg + "\n");
+    public synchronized void log(final String msg) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                TextView t=(TextView)findViewById(R.id.log);
+                t.append(msg + "\n");
+            }
+        });
     }
 }
