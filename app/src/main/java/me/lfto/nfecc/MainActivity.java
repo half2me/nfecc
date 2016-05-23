@@ -10,6 +10,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
@@ -17,8 +18,6 @@ import android.view.MenuItem;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
-
-import me.lfto.nfecc.DepStuff;
 
 import org.spongycastle.util.encoders.Base64;
 
@@ -47,10 +46,10 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                         "New keypair generated!", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
                 try {
-                    log("----- KEY INFO -----" + "\n\n");
-                    log("Private key:\n" + new String(Base64.encode(priKey), "ASCII") + "\n\n");
-                    log("Public key:\n" +  new String(Base64.encode(pubKey), "ASCII") + "\n\n");
-                    log("----- KEY INFO -----" + "\n");
+                    log("----- KEY INFO -----");
+                    log("Private key:\n" + new String(Base64.encode(priKey), "ASCII") + "\n");
+                    log("Public key:\n" +  new String(Base64.encode(pubKey), "ASCII"));
+                    log("----- KEY INFO -----");
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
@@ -87,6 +86,9 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
 
             }
         });
+
+        TextView t=(TextView)findViewById(R.id.log);
+        t.setMovementMethod(new ScrollingMovementMethod());
 
         // NFC
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
@@ -125,11 +127,16 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
 
     @Override
     public void onTagDiscovered(Tag tag) {
-        Log.i("Nfecc", "TAG discovered!");
+        log("NEW TAG!");
         IsoDep isodep = IsoDep.get(tag);
         try {
-            DepStuff.depInit(isodep);
+            if (DepStuff.depInit(isodep)) {
+                log("VALID TAG!");
+            } else {
+                log("BAD TAG!");
+            }
         } catch (IOException e) {
+            log("Failed to read TAG!");
             Log.e("Dep", e.getMessage());
             e.printStackTrace();
         }
@@ -157,13 +164,14 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
         return super.onOptionsItemSelected(item);
     }
 
-    public void clearLog(View view) {
+    public synchronized void clearLog(View view) {
         TextView t=(TextView)findViewById(R.id.log);
         t.setText("");
+        t.scrollTo(0,0);
     }
 
-    public void log(String msg) {
+    public synchronized void log(String msg) {
         TextView t=(TextView)findViewById(R.id.log);
-        t.append(msg);
+        t.append(msg + "\n");
     }
 }

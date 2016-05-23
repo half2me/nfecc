@@ -16,6 +16,8 @@
         android:id="@+id/log"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="bottom"
+        android:scrollbars="vertical"
         android:text="" />
 
 </RelativeLayout>

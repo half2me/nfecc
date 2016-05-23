@@ -22,7 +22,8 @@ public class DepStuff {
         return result;
     }
 
-    public static void depInit(IsoDep isoDep) throws IOException {
+    public static boolean depInit(IsoDep isoDep) throws IOException {
+        Boolean success = false;
         Log.i("Dep", "Attempting to connect...");
         isoDep.connect();
         Log.i("Dep", "Connected! Sending AID APDU...");
@@ -42,6 +43,7 @@ public class DepStuff {
             response = isoDep.transceive(payload);
             if (Cryptowiz.verify(payload, friendKey, response)) {
                 Log.i("Dep", "Verification successull!");
+                success = true;
             } else {
                 Log.e("Dep", "Verification failed!");
             }
@@ -51,5 +53,9 @@ public class DepStuff {
         }
         isoDep.close();
         Log.i("Dep", "Close");
+
+        return success;
     }
+
+
 }
