@@ -1,25 +1,20 @@
 package me.lfto.nfecc;
 
-import org.spongycastle.jce.ECNamedCurveTable;
-import org.spongycastle.jce.spec.ECNamedCurveParameterSpec;
-import org.spongycastle.util.encoders.Base64;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
+import android.util.Log;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.KeyFactory;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
+import java.security.KeyStore;
 import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.security.Security;
 import java.security.Signature;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.LinkedList;
-import java.util.List;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 
 /**
  * ECDA details:
@@ -28,20 +23,16 @@ import java.util.List;
  */
 public class Cryptowiz {
 
-    private static KeyPairGenerator g;
-    private static KeyFactory kf;
-    private static KeyPair kp;
-
-    public static List<PublicKey> knownKeys;
+    private static KeyStore ks;
 
     static {
-        Security.insertProviderAt(new org.spongycastle.jce.provider.BouncyCastleProvider(), 1);
-
         try {
-            g = KeyPairGenerator.getInstance("ECDSA", "SC");
-            kf = KeyFactory.getInstance("ECDSA", "SC");
-            knownKeys = new LinkedList<>();
-        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+            ks = KeyStore.getInstance("AndroidKeyStore");
+            ks.load(null);
+            if (!ks.containsAlias("nfecc")) {
+                newKeyPair("nfecc");
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -49,71 +40,65 @@ public class Cryptowiz {
     /**
      * Generate a new keypair
      */
-    public static void newKeyPair() {
-        ECNamedCurveParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec("prime256v1");
+    public static void newKeyPair(String alias) {
         try {
-            g.initialize(ecSpec, new SecureRandom());
-            kp = g.generateKeyPair();
-        } catch (InvalidAlgorithmParameterException e) {
-            e.printStackTrace();
-        }
-    }
+            KeyPairGenerator kpg = KeyPairGenerator.getInstance(
+                    KeyProperties.KEY_ALGORITHM_EC, "AndroidKeyStore");
+            kpg.initialize(new KeyGenParameterSpec.Builder(
+                    alias,
+                    KeyProperties.PURPOSE_SIGN | KeyProperties.PURPOSE_VERIFY)
+                    .setDigests(KeyProperties.DIGEST_SHA256,
+                            KeyProperties.DIGEST_SHA512)
+                    .build());
+            KeyPair kp = kpg.generateKeyPair();
 
-    public void importKeyPair(String publicKey, String privateKey) {
-        try {
-            // Import public key
-            X509EncodedKeySpec x509ks = new X509EncodedKeySpec(
-                    Base64.decode(publicKey));
-            PublicKey pub = kf.generatePublic(x509ks);
-
-            // Import private key
-            PKCS8EncodedKeySpec p8ks = new PKCS8EncodedKeySpec(
-                    Base64.decode(privateKey));
-            PrivateKey priv = kf.generatePrivate(p8ks);
-
-            // Save to keypair
-            kp = new KeyPair(pub, priv);
-
-        } catch (InvalidKeySpecException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     /**
-     * Get the public key in X509
+     * Get a certificate in X509
      *
-     * @return public key
+     * @return cert
      */
-    public static PublicKey publicKey() {
-        if (kp == null) {
-            newKeyPair();
+    public static Certificate getCertificate(String alias) throws Exception {
+        ks.load(null);
+        Certificate cert = ks.getCertificate(alias);
+        if (cert == null) {
+            Log.w("CryptoWizz", "No certificate called " + alias);
+            throw new Exception("No such certificate!");
         }
+        return cert;
+    }
+
+    public static void addCertificate(String alias, Certificate certificate) {
         try {
-            return kf.generatePublic(new X509EncodedKeySpec(kp.getPublic().getEncoded()));
-        } catch (InvalidKeySpecException e) {
+            ks.load(null);
+            ks.setCertificateEntry(alias, certificate);
+        } catch (Exception e) {
             e.printStackTrace();
-            return null;
         }
     }
 
-    public static PublicKey decodePublicKey(byte[] data) throws InvalidKeySpecException {
-        return kf.generatePublic(new X509EncodedKeySpec(data));
+    public static void addCertificate(String alias, byte[] certificate) {
+        try {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            InputStream in = new ByteArrayInputStream(certificate);
+            X509Certificate cert = (X509Certificate)cf.generateCertificate(in);
+            addCertificate(alias, cert);
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        }
     }
 
-    /**
-     * Get the private key in PKCS8
-     *
-     * @return private key
-     */
-    public static PrivateKey privateKey() {
-        if (kp == null) {
-            newKeyPair();
-        }
+    public static boolean aliasExists(String alias) {
         try {
-            return kf.generatePrivate(new PKCS8EncodedKeySpec(kp.getPrivate().getEncoded()));
-        } catch (InvalidKeySpecException e) {
+            ks.load(null);
+            return ks.containsAlias(alias);
+        } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return false;
         }
     }
 
@@ -125,8 +110,10 @@ public class Cryptowiz {
      */
     public static byte[] sign(byte[] data) {
         try {
-            Signature s = Signature.getInstance("NONEwithECDSA", "SC");
-            s.initSign(kp.getPrivate());
+            ks.load(null);
+            PrivateKey key = (PrivateKey) ks.getKey("nfecc", null);
+            Signature s = Signature.getInstance("SHA256withECDSA");
+            s.initSign(key);
             s.update(data);
             return s.sign();
         } catch (Exception e) {
@@ -139,16 +126,18 @@ public class Cryptowiz {
      * Verify digital signature
      *
      * @param data data that was signed
-     * @param key public key
-     * @param sig signature
+     * @param alias alias of the cert
+     * @param signature signature
      * @return result of validation
      */
-    public static boolean verify(byte[] data, PublicKey key, byte[] sig){
+    public static boolean verify(byte[] data, String alias, byte[] signature) {
         try {
-            Signature signer = Signature.getInstance("NONEwithECDSA", "SC");
-            signer.initVerify(key);
-            signer.update(data);
-            return (signer.verify(sig));
+            ks.load(null);
+            Certificate cert = ks.getCertificate(alias);
+            Signature s = Signature.getInstance("SHA256withECDSA");
+            s.initVerify(cert);
+            s.update(data);
+            return s.verify(signature);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
